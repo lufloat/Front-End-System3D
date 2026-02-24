@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://localhost:7248/api';
+const API_BASE_URL = 'https://back-endsystem3d.onrender.com';
 
 const api = axios.create({
  baseURL: API_BASE_URL,
