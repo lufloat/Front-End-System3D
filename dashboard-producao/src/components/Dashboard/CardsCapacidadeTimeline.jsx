@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { Calendar, ChevronRight, Activity, Clock, TrendingUp, Printer, BarChart3, Zap, Target, Award } from 'lucide-react';
 import TimelineCalendario from './TimelineCalendario';
 
+
+const baseUrl = import.meta.env.VITE_API_URL || 'https://back-endsystem3d.onrender.com/api/';
+
+
 const fmt = (n, d = 1) => {
   if (n === null || n === undefined || isNaN(n)) return '0.0';
   return Number(n).toFixed(d);
@@ -76,7 +80,7 @@ const CardsCapacidadeTimeline = ({ data, darkMode = false }) => {
       const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
       setLoadingProgress(30);
 
-      const url = `https://localhost:7248/api/dashboard/timeline/mes-consolidado?ano=${ano}&mes=${mes}`;
+      const url = `${baseUrl}Dashboard/timeline/mes-consolidado?ano=${ano}&mes=${mes}`;
       const response = await fetch(url, { signal: controller.signal });
       clearTimeout(timeoutId);
       setLoadingProgress(60);
