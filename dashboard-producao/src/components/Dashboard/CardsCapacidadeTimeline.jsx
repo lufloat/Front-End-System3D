@@ -3,7 +3,8 @@ import { Calendar, ChevronRight, Activity, Clock, TrendingUp, Printer, BarChart3
 import TimelineCalendario from './TimelineCalendario';
 
 
-const baseUrl = import.meta.env.VITE_API_URL || 'https://back-endsystem3d.onrender.com/api/';
+const baseUrl = import.meta.env.VITE_API_URL || 'http://192.168.148.19:8088/api/';
+// const baseUrl = import.meta.env.VITE_API_URL || 'https://back-endsystem3d.onrender.com/api/';
 
 
 const fmt = (n, d = 1) => {

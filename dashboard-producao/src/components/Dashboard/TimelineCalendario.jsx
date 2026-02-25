@@ -37,7 +37,8 @@ const carregarDados = async () => {
     setLoading(true);
     setError(null);
     try {
-      const baseUrl = import.meta.env.VITE_API_URL || 'https://back-endsystem3d.onrender.com/api/';
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://192.168.148.19:8088/api/';
+      // const baseUrl = import.meta.env.VITE_API_URL || 'https://back-endsystem3d.onrender.com/api/';
       const response = await fetch(
         `${baseUrl}Dashboard/timeline/mes-impressora/${impressora.impressoraId}?ano=${impressora.ano}&mes=${impressora.mes}`
       );
