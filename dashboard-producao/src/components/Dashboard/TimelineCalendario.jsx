@@ -232,4 +232,4 @@ const TimelineCalendario = ({ impressora, onFechar, darkMode = false }) => {
   );
 };
 
-// export default TimelineCalendario;
+export default TimelineCalendario; 
