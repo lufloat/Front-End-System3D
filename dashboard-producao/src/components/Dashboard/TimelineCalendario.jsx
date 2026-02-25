@@ -33,12 +33,13 @@ const TimelineCalendario = ({ impressora, onFechar, darkMode = false }) => {
 
   useEffect(() => { carregarDados(); }, [impressora]);
 
-  const carregarDados = async () => {
+const carregarDados = async () => {
     setLoading(true);
     setError(null);
     try {
+      const baseUrl = import.meta.env.VITE_API_URL || 'https://back-endsystem3d.onrender.com/api/';
       const response = await fetch(
-        `https://localhost:7248/api/dashboard/timeline/mes-impressora/${impressora.impressoraId}?ano=${impressora.ano}&mes=${impressora.mes}`
+        `${baseUrl}Dashboard/timeline/mes-impressora/${impressora.impressoraId}?ano=${impressora.ano}&mes=${impressora.mes}`
       );
       if (!response.ok) throw new Error(`Erro HTTP ${response.status}: ${response.statusText}`);
       const resultado = await response.json();

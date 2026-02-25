@@ -32,13 +32,14 @@ const TimelineHoraria = ({ machineId, impressoraNome, data, onFechar, darkMode =
 
   useEffect(() => { carregarTimeline(); }, [machineId, data]);
 
-  const carregarTimeline = async () => {
+const carregarTimeline = async () => {
     setLoading(true);
     setError(null);
     try {
+      const baseUrl = import.meta.env.VITE_API_URL || 'https://back-endsystem3d.onrender.com/api/';
       const dataFormatada = new Date(data).toISOString().split('T')[0];
       const response = await fetch(
-        `https://localhost:7248/api/Dashboard/timeline/dia/${machineId}?data=${dataFormatada}`
+        `${baseUrl}Dashboard/timeline/dia/${machineId}?data=${dataFormatada}`
       );
       if (!response.ok) throw new Error('Erro ao carregar timeline');
       setTimelineData(await response.json());
