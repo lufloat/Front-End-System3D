@@ -6,6 +6,9 @@ import CalendarioMensal from './CalendarioMensal';
  * ANÁLISE DE CAPACIDADE - COMPLETA COM RANKING DE MOTIVOS
  * Camadas 1 + 2
  */
+
+const baseUrl = import.meta.env.VITE_API_URL || 'http://192.168.148.19:8088/api/';
+
 const AnaliseCapacidadeEvoluida = ({ data }) => {
   const [mesModal, setMesModal] = useState(null);
   const [resumoConsolidado, setResumoConsolidado] = useState(null);
@@ -28,7 +31,7 @@ const AnaliseCapacidadeEvoluida = ({ data }) => {
       const ano = parseInt('20' + anoStr);
 
       const response = await fetch(
-        `https://localhost:7248/api/dashboard/timeline/mes-consolidado?ano=${ano}&mes=${mes}`
+        `${baseUrl}Dashboard/timeline/mes-consolidado?ano=${ano}&mes=${mes}`
       );
 
       if (!response.ok) throw new Error('Erro ao carregar');

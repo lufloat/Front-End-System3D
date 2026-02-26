@@ -10,6 +10,8 @@ import TimelineHoraria from './TimelineHoraria';
  * - Resumo de métricas mensais
  * - Clique no dia → abre timeline horária
  */
+const baseUrl = import.meta.env.VITE_API_URL || 'http://192.168.148.19:8088/api/';
+
 const CalendarioMensal = ({ impressora, onFechar }) => {
   const [resumoMensal, setResumoMensal] = useState(null);
   const [diaSelecionado, setDiaSelecionado] = useState(null);
@@ -26,8 +28,8 @@ const CalendarioMensal = ({ impressora, onFechar }) => {
 
     try {
       const response = await fetch(
-        `https://localhost:7248/api/Dashboard/timeline/mes-impressora/${impressora.impressoraId}?ano=${impressora.ano}&mes=${impressora.mes}`
-      );
+    `${baseUrl}Dashboard/timeline/mes-consolidado?ano=${ano}&mes=${mes}`
+    );
 
       if (!response.ok) throw new Error('Erro ao carregar calendário');
 
