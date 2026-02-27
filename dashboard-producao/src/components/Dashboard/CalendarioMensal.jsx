@@ -27,8 +27,9 @@ const CalendarioMensal = ({ impressora, onFechar }) => {
     setError(null);
 
     try {
-      const response = await fetch(
-    `${baseUrl}Dashboard/timeline/mes-consolidado?ano=${ano}&mes=${mes}`
+    const response = await fetch(
+  `${baseUrl}Dashboard/timeline/mes-consolidado?ano=${impressora.ano}&mes=${impressora.mes}`
+
     );
 
       if (!response.ok) throw new Error('Erro ao carregar calendário');
@@ -136,7 +137,7 @@ const CalendarioMensal = ({ impressora, onFechar }) => {
                         <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4">
                           <div className="text-xs text-gray-600 mb-1">🟢 Produção</div>
                           <div className="text-2xl font-bold text-green-600">
-                            {resumoMensal.metricas.taxaProducao?.toFixed(1)}%
+                            {resumoMensal.metricas.taxaProducao?.toFixed(1) ?? '0.0'}%
                           </div>
                           <div className="text-xs text-gray-500 mt-1">
                             {Math.round(resumoMensal.metricas.producao || 0)}h
@@ -147,7 +148,7 @@ const CalendarioMensal = ({ impressora, onFechar }) => {
                         <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4">
                           <div className="text-xs text-gray-600 mb-1">🟡 Pausas</div>
                           <div className="text-2xl font-bold text-yellow-600">
-                            {resumoMensal.metricas.taxaPausas?.toFixed(1)}%
+                            {resumoMensal.metricas.taxaPausas?.toFixed(1) ?? '0.0'}%
                           </div>
                           <div className="text-xs text-gray-500 mt-1">
                             {Math.round(resumoMensal.metricas.pausas || 0)}h
@@ -158,7 +159,7 @@ const CalendarioMensal = ({ impressora, onFechar }) => {
                         <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4">
                           <div className="text-xs text-gray-600 mb-1">🔴 Ociosidade</div>
                           <div className="text-2xl font-bold text-red-600">
-                            {resumoMensal.metricas.taxaOciosidade?.toFixed(1)}%
+                            {resumoMensal.metricas.taxaOciosidade?.toFixed(1) ?? '0.0'}%
                           </div>
                           <div className="text-xs text-gray-500 mt-1">
                             {Math.round(resumoMensal.metricas.ociosidade || 0)}h
@@ -169,7 +170,7 @@ const CalendarioMensal = ({ impressora, onFechar }) => {
                         <div className="bg-orange-50 border-2 border-orange-200 rounded-lg p-4">
                           <div className="text-xs text-gray-600 mb-1">🟠 Espera Op.</div>
                           <div className="text-2xl font-bold text-orange-600">
-                            {resumoMensal.metricas.taxaEsperaOperador?.toFixed(1)}%
+                            {resumoMensal.metricas.taxaEsperaOperador?.toFixed(1) ?? '0.0'}%
                           </div>
                           <div className="text-xs text-gray-500 mt-1">
                             {Math.round(resumoMensal.metricas.esperaOperador || 0)}h
@@ -180,7 +181,7 @@ const CalendarioMensal = ({ impressora, onFechar }) => {
                         <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
                           <div className="text-xs text-gray-600 mb-1">🔵 Manutenção</div>
                           <div className="text-2xl font-bold text-blue-600">
-                            {resumoMensal.metricas.taxaManutencao?.toFixed(1)}%
+                            {resumoMensal.metricas.taxaManutencao?.toFixed(1) ?? '0.0'}%
                           </div>
                           <div className="text-xs text-gray-500 mt-1">
                             {Math.round(resumoMensal.metricas.manutencao || 0)}h
@@ -195,7 +196,8 @@ const CalendarioMensal = ({ impressora, onFechar }) => {
                             ? "text-green-600"
                             : "text-red-600"
                         }`}>
-                          Total: {resumoMensal.metricas.totalTaxas?.toFixed(2)}% 
+                          {/* ✅ CERTO */}
+                           Total: {resumoMensal.metricas.totalTaxas?.toFixed(2) ?? '0.00'}%
                           {Math.abs(resumoMensal.metricas.totalTaxas - 100) < 0.1 && ' ✓'}
                         </span>
                       </div>
