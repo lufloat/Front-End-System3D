@@ -5,11 +5,6 @@ import {
 } from "recharts";
 import { Printer, TrendingUp, AlertTriangle, XCircle, BarChart3 } from "lucide-react";
 
-/**
- * ✅ REDESIGN - Mesma pegada do CardsCapacidadeTimeline
- * Paleta: azul/roxo, verde para produção
- * Dark + Light mode suportados
- */
 const VisaoGeralTabsComModal = ({
   producao = [],
   prototipos = [],
@@ -27,6 +22,18 @@ const VisaoGeralTabsComModal = ({
   const [modalData, setModalData]               = useState([]);
   const [periodoSelecionado, setPeriodoSelecionado] = useState(null);
   const [tituloModal, setTituloModal]           = useState("");
+
+  // ── DEBUG: log quando os dados mudam ─────────────────────────────────────
+  useEffect(() => {
+    console.log("📊 VisaoGeralTabsComModal recebeu:", {
+      anoSelecionado,
+      producao_length: producao?.length,
+      prototipos_length: prototipos?.length,
+      prototipos_sample: prototipos?.slice(0, 3),
+      failed_length: failed?.length,
+      aborted_length: aborted?.length,
+    });
+  }, [producao, prototipos, failed, aborted, anoSelecionado]);
 
   // ── tokens ───────────────────────────────────────────────────────────────
   const wrapBg      = darkMode ? "bg-gray-800 border-gray-700"  : "bg-white border-gray-200";
@@ -55,16 +62,44 @@ const VisaoGeralTabsComModal = ({
       return `${mes}/${anoSelecionado}`;
     }), [anoSelecionado]);
 
-  const filtrarPorAno  = (dados = []) => dados.filter(d => d.periodo?.endsWith(`/${anoSelecionado}`));
-  const completarMeses = (dados = []) => mesesDoAno.map(periodo => {
-    const item = dados.find(d => d.periodo === periodo);
-    return { periodo, valor: item?.valor ?? 0 };
-  });
+  // ── Normaliza dados: aceita tanto {periodo, valor} quanto {Periodo, Valor}
+  //    e garante que periodo está no formato MM/YYYY
+  const normalizarDados = (dados = []) => {
+    if (!Array.isArray(dados)) return [];
+    return dados.map(d => ({
+      periodo: d.periodo ?? d.Periodo ?? "",
+      valor: Number(d.valor ?? d.Valor ?? 0),
+    })).filter(d => d.periodo !== "");
+  };
 
-  const producaoFiltrada   = useMemo(() => completarMeses(filtrarPorAno(producao)),   [producao,   anoSelecionado]);
-  const prototiposFiltrada = useMemo(() => completarMeses(filtrarPorAno(prototipos)), [prototipos, anoSelecionado]);
-  const failedFiltrada     = useMemo(() => completarMeses(filtrarPorAno(failed)),     [failed,     anoSelecionado]);
-  const abortedFiltrada    = useMemo(() => completarMeses(filtrarPorAno(aborted)),    [aborted,    anoSelecionado]);
+  const producaoNorm   = useMemo(() => normalizarDados(producao),   [producao]);
+  const prototiposNorm = useMemo(() => normalizarDados(prototipos), [prototipos]);
+  const failedNorm     = useMemo(() => normalizarDados(failed),     [failed]);
+  const abortedNorm    = useMemo(() => normalizarDados(aborted),    [aborted]);
+
+  // ── Filtra por ano e completa os 12 meses ────────────────────────────────
+  const filtrarECompletar = (dados, meses) => {
+    const filtrados = dados.filter(d => d.periodo?.endsWith(`/${anoSelecionado}`));
+    return meses.map(periodo => {
+      const item = filtrados.find(d => d.periodo === periodo);
+      return { periodo, valor: item?.valor ?? 0 };
+    });
+  };
+
+  const producaoFiltrada   = useMemo(() => filtrarECompletar(producaoNorm,   mesesDoAno), [producaoNorm,   mesesDoAno, anoSelecionado]);
+  const prototiposFiltrada = useMemo(() => filtrarECompletar(prototiposNorm, mesesDoAno), [prototiposNorm, mesesDoAno, anoSelecionado]);
+  const failedFiltrada     = useMemo(() => filtrarECompletar(failedNorm,     mesesDoAno), [failedNorm,     mesesDoAno, anoSelecionado]);
+  const abortedFiltrada    = useMemo(() => filtrarECompletar(abortedNorm,    mesesDoAno), [abortedNorm,    mesesDoAno, anoSelecionado]);
+
+  // ── DEBUG: log pós-filtro ─────────────────────────────────────────────────
+  useEffect(() => {
+    console.log("📊 Dados filtrados:", {
+      producaoFiltrada_nonzero: producaoFiltrada.filter(d => d.valor > 0),
+      prototiposFiltrada_nonzero: prototiposFiltrada.filter(d => d.valor > 0),
+      failedFiltrada_nonzero: failedFiltrada.filter(d => d.valor > 0),
+      abortedFiltrada_nonzero: abortedFiltrada.filter(d => d.valor > 0),
+    });
+  }, [producaoFiltrada, prototiposFiltrada, failedFiltrada, abortedFiltrada]);
 
   const dadosGerais = useMemo(() => mesesDoAno.map(periodo => {
     const prod     = producaoFiltrada.find(d   => d.periodo === periodo)?.valor || 0;
@@ -74,12 +109,12 @@ const VisaoGeralTabsComModal = ({
     const total    = prod + proto + perdidos + abort;
     return {
       periodo,
-      producao:           prod,
-      prototipo:          proto,
+      producao:            prod,
+      prototipo:           proto,
       perdidos,
-      abortados:          abort,
+      abortados:           abort,
       total,
-      percentualFalhas:   total > 0 ? (perdidos / total) * 100 : 0,
+      percentualFalhas:    total > 0 ? (perdidos / total) * 100 : 0,
       percentualAbortados: total > 0 ? (abort   / total) * 100 : 0,
     };
   }), [producaoFiltrada, prototiposFiltrada, failedFiltrada, abortedFiltrada, mesesDoAno]);
@@ -103,10 +138,10 @@ const VisaoGeralTabsComModal = ({
   // ── modal ────────────────────────────────────────────────────────────────
   const abrirModal = (periodo, tipo) => {
     const map = {
-      producao:  { dados: producaoPorImpressora,  titulo: "Produção"           },
-      prototipos:{ dados: prototiposPorImpressora, titulo: "Protótipos"         },
-      perdidos:  { dados: failedPorImpressora,     titulo: "Perdidos (Failed)"  },
-      abortados: { dados: abortedPorImpressora,    titulo: "Abortados"          },
+      producao:   { dados: producaoPorImpressora,  titulo: "Produção"           },
+      prototipos: { dados: prototiposPorImpressora, titulo: "Protótipos"         },
+      perdidos:   { dados: failedPorImpressora,     titulo: "Perdidos (Failed)"  },
+      abortados:  { dados: abortedPorImpressora,    titulo: "Abortados"          },
     };
     const entry = map[tipo];
     if (!entry) return;
@@ -340,7 +375,7 @@ const VisaoGeralTabsComModal = ({
         </div>
       )}
 
-      <style jsx>{`
+      <style>{`
         @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fadeIn  { animation: fadeIn  0.2s ease-out; }

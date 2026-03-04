@@ -2,13 +2,16 @@ import axios from 'axios';
 
  const API_BASE_URL = import.meta.env.VITE_API_URL 
 
+
 const api = axios.create({
- baseURL: API_BASE_URL,
- headers: {
- 'Content-Type': 'application/json',
- },
- timeout: 60000, // 60 segundos padrão
-});
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+    'Cache-Control': 'no-cache',
+    'Pragma': 'no-cache',
+  },
+  timeout: 60000,
+})
 
 api.interceptors.response.use(
  response => response,

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Info, Printer, AlertTriangle, XCircle, ChevronRight, TrendingUp, Package, BarChart3, Zap } from 'lucide-react';
 import { dashboardAPI } from '../../services/api';
+
 
 /**
  * ✅ REDESIGN - Mesma pegada do CardsCapacidadeTimeline
@@ -21,28 +22,45 @@ const CardsKgComModal = ({ data, darkMode = true }) => {
     }));
   };
 
-  const abrirModal = async (mesAno) => {
-    setMesModal(mesAno);
-    setLoadingModal(true);
-    try {
-      const [mesTexto, anoTexto] = mesAno.split('/');
-      const ano = 2000 + parseInt(anoTexto);
-      const meses = {
-        'JAN': 1, 'FEV': 2, 'MAR': 3, 'ABR': 4,
-        'MAI': 5, 'JUN': 6, 'JUL': 7, 'AGO': 8,
-        'SET': 9, 'OUT': 10, 'NOV': 11, 'DEZ': 12
-      };
-      const mes = meses[mesTexto];
-      const response = await dashboardAPI.getCardsKgPorImpressora({ ano, mes });
-      setDadosModal(response.data);
-    } catch (error) {
-      console.error('❌ Erro ao buscar dados do modal:', error);
-      setDadosModal([]);
-    } finally {
-      setLoadingModal(false);
-    }
-  };
+  
+const loadingRef = useRef(false);
 
+const abrirModal = async (mesAno) => {
+  if (loadingRef.current) return;
+  loadingRef.current = true;
+  
+  setMesModal(mesAno);
+  setLoadingModal(true);
+  try {
+    const [mesTexto, anoTexto] = mesAno.split('/');
+    const ano = 2000 + parseInt(anoTexto);
+    const meses = {
+      // Português
+      'JAN': 1, 'FEV': 2, 'MAR': 3, 'ABR': 4,
+      'MAI': 5, 'JUN': 6, 'JUL': 7, 'AGO': 8,
+      'SET': 9, 'OUT': 10, 'NOV': 11, 'DEZ': 12,
+      // Inglês (retornado pelo backend)
+      'FEB': 2, 'APR': 4, 'MAY': 5, 'AUG': 8,
+      'SEP': 9, 'OCT': 10, 'DEC': 12
+    };
+    const mes = meses[mesTexto];
+
+    if (!mes) {
+      console.error(`❌ Mês não reconhecido: "${mesTexto}"`);
+      setDadosModal([]);
+      return;
+    }
+
+    const response = await dashboardAPI.getCardsKgPorImpressora({ ano, mes });
+    setDadosModal(response.data);
+  } catch (error) {
+    console.error('❌ Erro ao buscar dados do modal:', error);
+    setDadosModal([]);
+  } finally {
+    setLoadingModal(false);
+    loadingRef.current = false;
+  }
+};
   const fecharModal = () => {
     setMesModal(null);
     setDadosModal([]);

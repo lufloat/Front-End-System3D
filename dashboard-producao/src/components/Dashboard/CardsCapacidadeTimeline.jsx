@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, ChevronRight, Activity, Clock, TrendingUp, Printer, BarChart3, Zap, Target, Award } from 'lucide-react';
 import TimelineCalendario from './TimelineCalendario';
 
-
 const baseUrl = import.meta.env.VITE_API_URL || 'http://192.168.148.19:8088/api/';
-// const baseUrl = import.meta.env.VITE_API_URL || 'https://back-endsystem3d.onrender.com/api/';
 
+// ── Versão do cache: mude este número sempre que a estrutura da API mudar ──
+const CACHE_VERSION = 'v6'; // ← bumped para invalidar caches antigos sem taxaSucesso
 
 const fmt = (n, d = 1) => {
   if (n === null || n === undefined || isNaN(n)) return '0.0';
@@ -36,6 +36,30 @@ const calcPctMotivos = (motivos) => {
   }));
 };
 
+// ── Calcula taxaSucesso a partir das impressoras individuais (fallback) ──
+const calcTaxaSucessoFallback = (impressoras) => {
+  if (!impressoras || impressoras.length === 0) return 0;
+  const totalFin = impressoras.reduce((s, i) => s + (i.jobsFinalizados || 0), 0);
+  const totalAbo = impressoras.reduce((s, i) => s + (i.jobsAbortados  || 0), 0);
+  const total = totalFin + totalAbo;
+  return total > 0 ? parseFloat(((totalFin / total) * 100).toFixed(1)) : 0;
+};
+
+// ── Limpa todos os caches sem a versão atual ──
+const limparCacheAntigo = () => {
+  const keysParaRemover = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith('consolidado_') && !key.includes(CACHE_VERSION)) {
+      keysParaRemover.push(key);
+    }
+  }
+  keysParaRemover.forEach(k => localStorage.removeItem(k));
+  if (keysParaRemover.length > 0) {
+    console.log(`🧹 Cache antigo limpo: ${keysParaRemover.length} entradas removidas`);
+  }
+};
+
 const CardsCapacidadeTimeline = ({ data, darkMode = false }) => {
   const [mesModal, setMesModal] = useState(null);
   const [resumoConsolidado, setResumoConsolidado] = useState(null);
@@ -47,6 +71,10 @@ const CardsCapacidadeTimeline = ({ data, darkMode = false }) => {
 
   const MAX_RETRIES = 3;
   const TIMEOUT_MS = 30000;
+
+  useEffect(() => {
+    limparCacheAntigo();
+  }, []);
 
   const abrirModal = async (mesAno) => {
     setMesModal(mesAno);
@@ -63,16 +91,24 @@ const CardsCapacidadeTimeline = ({ data, darkMode = false }) => {
       const mes = meses[mesNome];
       const ano = parseInt('20' + anoStr);
 
-      const cacheKey = `consolidado_${ano}_${mes}`;
+      const cacheKey = `consolidado_${CACHE_VERSION}_${ano}_${mes}`;
+      const cacheTimestampKey = `${cacheKey}_timestamp`;
+
       const cached = localStorage.getItem(cacheKey);
-      const cacheTimestamp = localStorage.getItem(`${cacheKey}_timestamp`);
+      const cacheTimestamp = localStorage.getItem(cacheTimestampKey);
 
       if (cached && cacheTimestamp) {
         const age = Date.now() - parseInt(cacheTimestamp);
         if (age < 4 * 60 * 60 * 1000) {
-          setResumoConsolidado(JSON.parse(cached));
-          setLoading(false);
-          return;
+          const parsed = JSON.parse(cached);
+          const taxaCache = Number(parsed?.metricas?.taxaSucesso ?? -1);
+          if (taxaCache > 0 && parsed?.metricas?.taxaSucesso !== undefined) {
+            setResumoConsolidado(parsed);
+            setLoading(false);
+            return;
+          }
+          localStorage.removeItem(cacheKey);
+          localStorage.removeItem(cacheTimestampKey);
         }
       }
 
@@ -93,10 +129,17 @@ const CardsCapacidadeTimeline = ({ data, darkMode = false }) => {
 
       setLoadingProgress(80);
       const resultado = await response.json();
+
       if (!resultado.distribuicao) throw new Error('Resposta da API sem campo "distribuicao".');
 
+      // ── Log diagnóstico (remova após confirmar o fix) ──
+      console.log('📦 JSON completo da API:', resultado);
+      console.log('📊 metricas:', resultado.metricas);
+      console.log('🔑 chaves de metricas:', Object.keys(resultado.metricas || {}));
+      console.log('🎯 taxaSucesso da API:', resultado.metricas?.taxaSucesso);
+
       localStorage.setItem(cacheKey, JSON.stringify(resultado));
-      localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
+      localStorage.setItem(cacheTimestampKey, Date.now().toString());
       setLoadingProgress(100);
       setResumoConsolidado(resultado);
       setRetryCount(0);
@@ -156,7 +199,6 @@ const CardsCapacidadeTimeline = ({ data, darkMode = false }) => {
   const txtS   = darkMode ? 'text-gray-400' : 'text-gray-600';
   const border = darkMode ? 'border-gray-700' : 'border-gray-200';
 
-  // ── Helpers de tema para blocos de motivos ──────────────
   const pausaBg     = darkMode ? 'bg-yellow-900/30 border-yellow-700' : 'bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-200';
   const pausaTitulo = darkMode ? 'text-yellow-300' : 'text-yellow-900';
   const pausaItemBg = darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-yellow-100';
@@ -300,15 +342,22 @@ const CardsCapacidadeTimeline = ({ data, darkMode = false }) => {
                 const dist = resumoConsolidado.distribuicao || {};
                 const met  = resumoConsolidado.metricas    || {};
 
-                const hProd   = Number(dist.producao?.horas      || 0);
-                const hPausa  = Number(dist.pausas?.horas        || 0);
-                const hOcio   = Number(dist.ociosidade?.horas    || 0);
-                const hEspera = Number(dist.esperaOperador?.horas|| 0);
-                const hManut  = Number(dist.manutencao?.horas    || 0);
+                // ── taxaSucesso: lê da API, com fallback calculado das impressoras ──
+                const taxaSucesso = Number(
+                  met.taxaSucesso != null && met.taxaSucesso !== 0
+                    ? met.taxaSucesso
+                    : calcTaxaSucessoFallback(resumoConsolidado.impressoras)
+                );
 
-                const mPausas = calcPctMotivos(resumoConsolidado.motivos?.pausas         || []);
-                const mOcio   = calcPctMotivos(resumoConsolidado.motivos?.ociosidade      || []);
-                const mEspera = calcPctMotivos(resumoConsolidado.motivos?.esperaOperador  || []);
+                const hProd   = Number(dist.producao?.horas       || 0);
+                const hPausa  = Number(dist.pausas?.horas         || 0);
+                const hOcio   = Number(dist.ociosidade?.horas     || 0);
+                const hEspera = Number(dist.esperaOperador?.horas || 0);
+                const hManut  = Number(dist.manutencao?.horas     || 0);
+
+                const mPausas = calcPctMotivos(resumoConsolidado.motivos?.pausas        || []);
+                const mOcio   = calcPctMotivos(resumoConsolidado.motivos?.ociosidade    || []);
+                const mEspera = calcPctMotivos(resumoConsolidado.motivos?.esperaOperador || []);
 
                 return (
                   <div className="space-y-8">
@@ -340,7 +389,7 @@ const CardsCapacidadeTimeline = ({ data, darkMode = false }) => {
                             <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center"><Award className="w-7 h-7" /></div>
                             <span className="text-sm font-semibold opacity-90">Taxa de Sucesso</span>
                           </div>
-                          <div className="text-4xl font-bold mb-2">{fmt(met.taxaSucesso)}%</div>
+                          <div className="text-4xl font-bold mb-2">{fmt(taxaSucesso)}%</div>
                           <div className="text-sm opacity-75">Jobs finalizados com êxito</div>
                         </div>
                       </div>
@@ -352,7 +401,6 @@ const CardsCapacidadeTimeline = ({ data, darkMode = false }) => {
                         <BarChart3 className="w-6 h-6 text-blue-500" /> Distribuição do Tempo no Mês
                       </h4>
 
-                      {/* Barra visual */}
                       <div className="flex w-full h-16 rounded-2xl overflow-hidden mb-6 shadow-lg">
                         {dist.producao?.taxa > 0 && (
                           <div className="bg-green-500 flex items-center justify-center text-white text-sm font-bold"
@@ -389,7 +437,6 @@ const CardsCapacidadeTimeline = ({ data, darkMode = false }) => {
                         )}
                       </div>
 
-                      {/* Cards legenda — todos com cores condicionais */}
                       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                         <div className={`${cardBg} rounded-xl p-4 border-2 ${darkMode ? 'border-green-800' : 'border-green-200'}`}>
                           <div className="flex items-center gap-2 mb-3">
@@ -548,7 +595,6 @@ const CardsCapacidadeTimeline = ({ data, darkMode = false }) => {
                                 </div>
                               </div>
 
-                              {/* Linha de pausas — fundo condicional */}
                               {imp.taxaPausas > 0 && (
                                 <div className={`mt-3 flex items-center justify-between ${darkMode ? 'bg-yellow-900/30' : 'bg-yellow-50'} rounded-lg px-3 py-2`}>
                                   <span className={`text-xs ${txtS}`}>🟡 Pausas</span>
