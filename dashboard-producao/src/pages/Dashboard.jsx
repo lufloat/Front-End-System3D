@@ -5,7 +5,6 @@ import { Moon, Sun } from 'lucide-react';
 import MetricasKPI from "../components/Dashboard/MetricasKPI";
 import ComposicaoSKUs from "../components/Dashboard/ComposicaoSKUs";
 import EvolucaoSKUs from "../components/Dashboard/EvolucaoSKUs";
-import ProducaoAnual from "../components/Dashboard/ProducaoAnual";
 import TabelaProducaoMensal from "../components/Dashboard/TabelaProducaoMensal";
 import VisaoGeralTabsComModal from "../components/Dashboard/VisaoGeralTabsComModal";
 import CardsKgComModal from "../components/Dashboard/CardsKgComModal";
@@ -286,10 +285,10 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {dados.metricas && <MetricasKPI data={dados.metricas} darkMode={darkMode} />}
-        {dados.metricas && <ComposicaoSKUs data={dados.metricas} darkMode={darkMode} />}
+        {dados.metricas && <ComposicaoSKUs data={dados.metricas} darkMode={darkMode} anoSelecionado={anoSelecionado} />}
+
         {dados.evolucaoSKUs.length > 0 && <EvolucaoSKUs data={dados.evolucaoSKUs} darkMode={darkMode} />}
-        {dados.producaoAnual.length > 0 && <ProducaoAnual data={dados.producaoAnual} darkMode={darkMode} />}
+        
 
         {dados.visaoGeral.producao.length > 0 && (
           <VisaoGeralTabsComModal
