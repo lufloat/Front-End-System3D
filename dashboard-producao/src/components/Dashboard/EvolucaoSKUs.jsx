@@ -11,7 +11,7 @@ const LINHAS = [
   { key: 'componentes',           nome: 'Componentes',      cor: '#f97316' },
   { key: 'sku_ticket',            nome: 'SKU Ticket',       cor: '#ec4899' },
   { key: 'sku_estimated',         nome: 'SKU Estimado',     cor: '#14b8a6' },
-  { key: 'componentes_prototipo', nome: 'Comp. Protótipo',  cor: '#8b5cf6' },
+  { key: 'componentes_prototipo', nome: 'Componentes de protótipos',  cor: '#8b5cf6' },
 ];
 
 // Quais linhas ficam visíveis por padrão

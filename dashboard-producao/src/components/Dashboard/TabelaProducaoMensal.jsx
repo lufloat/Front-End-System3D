@@ -54,7 +54,7 @@ const TabelaProducaoMensal = ({ dadosGerais = [], anoSelecionado = "2026", darkM
             <tr className={`${thBg} ${thText} uppercase tracking-wider text-xs`}>
               <th className="px-4 py-3 text-left font-semibold rounded-tl-xl">Mês</th>
               <th className="px-4 py-3 text-center font-semibold">Produção</th>
-              <th className="px-4 py-3 text-center font-semibold">Protótipo</th>
+              <th className="px-4 py-3 text-center font-semibold">Mesas de protótipos</th>
               <th className="px-4 py-3 text-center font-semibold">Abortados</th>
               <th className="px-4 py-3 text-center font-semibold">Perdidos</th>
               <th className="px-4 py-3 text-center font-semibold">% Falhas</th>

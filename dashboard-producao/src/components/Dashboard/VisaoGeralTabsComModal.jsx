@@ -139,7 +139,7 @@ const VisaoGeralTabsComModal = ({
   const abrirModal = (periodo, tipo) => {
     const map = {
       producao:   { dados: producaoPorImpressora,  titulo: "Produção"           },
-      prototipos: { dados: prototiposPorImpressora, titulo: "Protótipos"         },
+      prototipos: { dados: prototiposPorImpressora, titulo: "Mesas de protótipos"         },
       perdidos:   { dados: failedPorImpressora,     titulo: "Perdidos (Failed)"  },
       abortados:  { dados: abortedPorImpressora,    titulo: "Abortados"          },
     };
@@ -164,7 +164,7 @@ const VisaoGeralTabsComModal = ({
   const tabs = [
     { id: "geral",      label: "Visão Geral" },
     { id: "producao",   label: "Produção"    },
-    { id: "prototipos", label: "Protótipos"  },
+    { id: "prototipos", label: "Mesas de protótipos"  },
     { id: "perdidos",   label: "Perdidos"    },
     { id: "abortados",  label: "Abortados"   },
   ];
@@ -193,7 +193,7 @@ const VisaoGeralTabsComModal = ({
       badge: null,
     },
     {
-      label: "Protótipos",
+      label: "Mesas de protótipos",
       value: totaisAnuais.totalPrototipo,
       icon: Printer,
       color: "from-blue-500 to-blue-600",
