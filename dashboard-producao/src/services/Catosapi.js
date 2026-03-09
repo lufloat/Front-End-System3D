@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const CATOS_API_URL = import.meta.env.VITE_CATOS_API_URL || '';
+const CATOS_API_URL = import.meta.env.VITE_CATOS_API_URL || 'http://192.168.148.19:18080';
 
 const catosApi = axios.create({
   baseURL: CATOS_API_URL,
@@ -18,7 +18,6 @@ catosApi.interceptors.response.use(
 
 export const catosAPI = {
   getMonthlyTotals: () =>
-    catosApi.get('/catos/api/v1/metrics/system/monthly-totals'),
+    catosApi.get('/api/v1/metrics/system/monthly-totals'),
 };
 
-export default catosApi;
