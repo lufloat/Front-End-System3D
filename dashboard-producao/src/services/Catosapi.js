@@ -18,6 +18,4 @@ export const catosAPI = {
   // ✅ sem /api/v1/ aqui — já está no baseURL via proxy
   getMonthlyTotals: () =>
     catosApi.get('/metrics/system/monthly-totals'),
-};
-
-export default catosApi;
+}; 
