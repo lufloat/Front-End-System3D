@@ -1,9 +1,7 @@
 import axios from 'axios';
 
-const CATOS_API_URL = import.meta.env.VITE_CATOS_API_URL || 'http://192.168.148.19:18080';
-
 const catosApi = axios.create({
-  baseURL: CATOS_API_URL,
+  baseURL: import.meta.env.VITE_API_URL, // ✅ mesmo proxy do api.js
   headers: { 'Content-Type': 'application/json' },
   timeout: 30000,
 });
@@ -17,7 +15,9 @@ catosApi.interceptors.response.use(
 );
 
 export const catosAPI = {
+  // ✅ sem /api/v1/ aqui — já está no baseURL via proxy
   getMonthlyTotals: () =>
-    catosApi.get('/api/v1/metrics/system/monthly-totals'),
+    catosApi.get('/metrics/system/monthly-totals'),
 };
 
+export default catosApi;

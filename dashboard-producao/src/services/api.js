@@ -1,7 +1,6 @@
 import axios from 'axios';
 
- const API_BASE_URL = import.meta.env.VITE_API_URL 
-
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -11,209 +10,163 @@ const api = axios.create({
     'Pragma': 'no-cache',
   },
   timeout: 60000,
-})
+});
 
 api.interceptors.response.use(
- response => response,
- error => {
- console.error('❌ Erro na API:', {
- url: error.config?.url,
- method: error.config?.method,
- status: error.response?.status,
- statusText: error.response?.statusText,
- data: error.response?.data,
- message: error.message
- });
+  response => response,
+  error => {
+    console.error('❌ Erro na API:', {
+      url: error.config?.url,
+      method: error.config?.method,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      message: error.message,
+    });
 
- if (error.response?.status === 401) {
- console.error('Não autorizado');
- } else if (error.response?.status === 500) {
- console.error('Erro interno do servidor');
- }
+    if (error.response?.status === 401) {
+      console.error('Não autorizado');
+    } else if (error.response?.status === 500) {
+      console.error('Erro interno do servidor');
+    }
 
- return Promise.reject(error);
- }
+    return Promise.reject(error);
+  }
 );
 
 api.interceptors.request.use(
- config => {
- console.log(`📤 API Request: ${config.method?.toUpperCase()} ${config.url}`, config.params);
- return config;
- },
- error => {
- return Promise.reject(error);
- }
+  config => {
+    console.log(`📤 API Request: ${config.method?.toUpperCase()} ${config.url}`, config.params);
+    return config;
+  },
+  error => Promise.reject(error)
 );
 
 export const dashboardAPI = {
- // ==========================================
- // KPIs e SKUs
- // ==========================================
- getMetricasKPI: (params = {}) =>
- api.get('/Dashboard/kpis', { params }),
+  // ==========================================
+  // KPIs e SKUs
+  // ==========================================
+  getMetricasKPI: (params = {}) =>
+    api.get('/Dashboard/kpis', { params }),
 
- getEvolucaoSKUs: (params = {}) =>
- api.get('/Dashboard/evolucao-skus', { params }),
+  getEvolucaoSKUs: (params = {}) =>
+    api.get('/Dashboard/evolucao-skus', { params }),
 
- // ==========================================
- // Produção Geral
- // ==========================================
- getProducaoAnual: (params = {}) =>
- api.get('/Producao/anual', { params }),
+  // ==========================================
+  // Produção Geral
+  // ==========================================
+  getProducaoAnual: (params = {}) =>
+    api.get('/Producao/anual', { params }),
 
- getProducaoMensalDetalhada: (params = {}) =>
- api.get('/Producao/mensal', { params }),
+  getProducaoMensalDetalhada: (params = {}) =>
+    api.get('/Producao/mensal', { params }),
 
- getRecondicionados: (params = {}) =>
- api.get('/Producao/recondicionados', { params }),
+  getEquipamentos: () =>
+    api.get('/Producao/equipamentos'),
 
- getProducaoPlacas: (params = {}) =>
- api.get('/Producao/placas', { params }),
+  // ==========================================
+  // Visão Geral - Mensal
+  // ==========================================
+  getProducaoMensal: (params = {}) =>
+    api.get('/Dashboard/visao-geral/producao', { params }),
 
- getEquipamentos: () =>
- api.get('/Producao/equipamentos'),
+  getPrototiposMensal: (params = {}) =>
+    api.get('/Dashboard/visao-geral/prototipos', { params }),
 
- // ==========================================
- // Visão Geral - Mensal (CONSOLIDADO)
- // ==========================================
- getProducaoMensal: (params = {}) =>
- api.get('/Dashboard/visao-geral/producao', { params }),
+  getErrosMensal: (params = {}) =>
+    api.get('/Dashboard/visao-geral/erros', { params }),
 
- getPrototiposMensal: (params = {}) =>
- api.get('/Dashboard/visao-geral/prototipos', { params }),
+  getPesoMensal: (params = {}) =>
+    api.get('/Dashboard/visao-geral/peso', { params }),
 
- getErrosMensal: (params = {}) =>
- api.get('/Dashboard/visao-geral/erros', { params }),
+  getFailedMensal: (params = {}) =>
+    api.get('/Dashboard/visao-geral/failed', { params }),
 
- getPesoMensal: (params = {}) =>
- api.get('/Dashboard/visao-geral/peso', { params }),
+  getAbortedMensal: (params = {}) =>
+    api.get('/Dashboard/visao-geral/aborted', { params }),
 
- getFailedMensal: (params = {}) =>
- api.get('/Dashboard/visao-geral/failed', { params }),
+  // ==========================================
+  // Visão Geral - Por Impressora (Anual)
+  // ==========================================
+  getProducaoPorImpressoraAnual: (params = {}) =>
+    api.get('/Dashboard/visao-geral/producao/impressora/anual', { params }),
 
- getAbortedMensal: (params = {}) =>
- api.get('/Dashboard/visao-geral/aborted', { params }),
+  getPrototiposPorImpressoraAnual: (params = {}) =>
+    api.get('/Dashboard/visao-geral/prototipos/impressora/anual', { params }),
 
- // ==========================================
- // Visão Geral - Por Impressora (ANUAL)
- // ==========================================
- getProducaoPorImpressoraAnual: (params = {}) =>
- api.get('/Dashboard/visao-geral/producao/impressora/anual', { params }),
+  getErrosPorImpressoraAnual: (params = {}) =>
+    api.get('/Dashboard/visao-geral/erros/impressora/anual', { params }),
 
- getPrototiposPorImpressoraAnual: (params = {}) =>
- api.get('/Dashboard/visao-geral/prototipos/impressora/anual', { params }),
+  getPesoPorImpressoraAnual: (params = {}) =>
+    api.get('/Dashboard/visao-geral/peso/impressora/anual', { params }),
 
- getErrosPorImpressoraAnual: (params = {}) =>
- api.get('/Dashboard/visao-geral/erros/impressora/anual', { params }),
+  getFailedPorImpressoraAnual: (params = {}) =>
+    api.get('/Dashboard/visao-geral/failed/impressora/anual', { params }),
 
- getPesoPorImpressoraAnual: (params = {}) =>
- api.get('/Dashboard/visao-geral/peso/impressora/anual', { params }),
+  getAbortedPorImpressoraAnual: (params = {}) =>
+    api.get('/Dashboard/visao-geral/aborted/impressora/anual', { params }),
 
- getFailedPorImpressoraAnual: (params = {}) =>
- api.get('/Dashboard/visao-geral/failed/impressora/anual', { params }),
+  // ==========================================
+  // Cards - KG
+  // ==========================================
+  getCardsKg: (params = {}) =>
+    api.get('/Dashboard/cards/kg', { params }),
 
- getAbortedPorImpressoraAnual: (params = {}) =>
- api.get('/Dashboard/visao-geral/aborted/impressora/anual', { params }),
+  getCardsKgPorImpressora: (params = {}) =>
+    api.get('/Dashboard/cards/kg/impressora', { params }),
 
- // ==========================================
- // Cards - KG e Capacidade (CONSOLIDADO)
- // ==========================================
- getCardsKg: (params = {}) =>
- api.get('/Dashboard/cards/kg', { params }),
- 
- // ==========================================
- // Cards - Por Impressora (MÊS ESPECÍFICO)
- // ==========================================
- getCardsKgPorImpressora: (params = {}) =>
- api.get('/Dashboard/cards/kg/impressora', { params }),
+  getCardsCapacidadePorImpressora: (params = {}) =>
+    api.get('/Dashboard/cards/capacidade/impressora', { params }),
 
- getCardsCapacidadePorImpressora: (params = {}) =>
- api.get('/Dashboard/cards/capacidade/impressora', { params }),
+  // ==========================================
+  // Timeline
+  // ==========================================
+  obterResumoMensalConsolidado: (ano, mes) =>
+    api.get('/Dashboard/timeline/mes-consolidado', {
+      params: { ano, mes },
+      timeout: 120000,
+    }),
 
- // ==========================================
- // ✅ TIMELINE - NOVOS ENDPOINTS OTIMIZADOS
- // ==========================================
+  obterResumoMensalImpressora: (machineId, ano, mes) =>
+    api.get(`/Dashboard/timeline/mes-impressora/${machineId}`, {
+      params: { ano, mes },
+      timeout: 90000,
+    }),
 
- /**
- * Obter resumo mensal consolidado (todas impressoras)
- * GET /api/dashboard/timeline/mes-consolidado?ano=2026&mes=1
- * Com cache de 30 minutos no backend
- */
- obterResumoMensalConsolidado: (ano, mes) => {
- return api.get('/Dashboard/timeline/mes-consolidado', {
- params: { ano, mes },
- timeout: 120000 // 2 minutos (cache backend reduz muito)
- });
- },
+  obterResumoDiario: (machineId, data) =>
+    api.get(`/Dashboard/timeline/dia/${machineId}`, {
+      params: { data },
+      timeout: 30000,
+    }),
 
- /**
- * Obter resumo mensal de uma impressora específica
- * GET /api/dashboard/timeline/mes-impressora/{machineId}?ano=2026&mes=1
- */
- obterResumoMensalImpressora: (machineId, ano, mes) => {
- return api.get(`/Dashboard/timeline/mes-impressora/${machineId}`, {
- params: { ano, mes },
- timeout: 90000 // 90 segundos
- });
- },
+  // ==========================================
+  // Métricas do Sistema (API do Gabriel - novos)
+  // ==========================================
 
- /**
- * Obter resumo de um dia específico
- * GET /api/dashboard/timeline/dia/{machineId}?data=2026-01-15
- */
- obterResumoDiario: (machineId, data) => {
- return api.get(`/Dashboard/timeline/dia/${machineId}`, {
- params: { data },
- timeout: 30000 // 30 segundos
- });
- },
+  // Totais mensais globais: mesas, componentes, sku_ticket, sku_estimated, componentes_prototipo
+  // GET /metrics/system/monthly-totals?year=2026&month=3
+  getMonthlyTotals: (params = {}) =>
+    api.get('/metrics/system/monthly-totals', { params }),
 
- /**
- * Obter timeline horária de um dia (estilo Teams)
- * GET /api/dashboard/timeline/horaria/{machineId}?data=2026-01-15
- */
- obterTimelineHoraria: (machineId, data) => {
- return api.get(`/Dashboard/timeline/horaria/${machineId}`, {
- params: { data },
- timeout: 30000 // 30 segundos
- });
- },
+  // SKUs/componentes produzidos em um período
+  // GET /metrics/system/produced-items-period?tipo=sku&data_inicio=2026-01-01&data_fim=2026-03-31
+  getProducedItemsPeriod: (params = {}) =>
+    api.get('/metrics/system/produced-items-period', { params }),
 
- // ==========================================
- // ANÁLISE DE EVENTOS (ANTIGO - MANTIDO)
- // ==========================================
- analisarTodasImpressoras: (params = {}) =>
- api.get('/Dashboard/analise/todas-impressoras', {
- params,
- timeout: 120000 // 2 minutos
- }),
+  // Tempos mensais por impressora: printing, paused, idle, waiting_cleaning (em horas e segundos)
+  // GET /metrics/system/printer-times-monthly?year=2026&month=3
+  getPrinterTimesMonthly: (params = {}) =>
+    api.get('/metrics/system/printer-times-monthly', { params }),
 
- analisarImpressora: (machineId, params = {}) =>
- api.get(`/Dashboard/analise/impressora/${machineId}`, {
- params,
- timeout: 90000
- }),
+  // Material usado e perdido por mês, impressora e material (em gramas e kg)
+  // GET /metrics/system/material-usage-monthly?year=2026&month=3
+  getMaterialUsageMonthly: (params = {}) =>
+    api.get('/metrics/system/material-usage-monthly', { params }),
 
- obterEventosImpressora: (machineId, params = {}) =>
- api.get(`/Dashboard/eventos/impressora/${machineId}`, { params }),
-
- obterEventosJob: (jobUuid, params = {}) =>
- api.get(`/Dashboard/eventos/job/${jobUuid}`, { params }),
-
- // ==========================================
- // Sincronização
- // ==========================================
- sincronizarMes: (ano, mes) =>
- api.post(`/Sync/mes?ano=${ano}&mes=${mes}`),
-
- sincronizarPeriodo: (params) =>
- api.post('/Sync/periodo', null, { params }),
-
- sincronizarAno: (ano) =>
- api.post(`/Sync/ano?ano=${ano}`),
-
- sincronizarUltimosMeses: () =>
- api.post('/Sync/ultimos-meses'),
+  // Taxa de sucesso mensal com breakdown por status (finished, failed, aborted, etc.)
+  // GET /metrics/system/success-rate-monthly?year=2026&month=3
+  getSuccessRateMonthly: (params = {}) =>
+    api.get('/metrics/system/success-rate-monthly', { params }),
 };
 
 export default api;

@@ -188,7 +188,6 @@ const CalendarioMensal = ({ impressora, onFechar }) => {
                           </div>
                         </div>
                       </div>
-
                       {/* Validação 100% */}
                       <div className="mt-3 text-right">
                         <span className={`text-sm font-semibold ${

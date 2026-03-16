@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { dashboardAPI } from "../services/api.js";
 import { Moon, Sun } from 'lucide-react';
 
-import MetricasKPI from "../components/Dashboard/MetricasKPI";
 import ComposicaoSKUs from "../components/Dashboard/ComposicaoSKUs";
 import EvolucaoSKUs from "../components/Dashboard/EvolucaoSKUs";
 import TabelaProducaoMensal from "../components/Dashboard/TabelaProducaoMensal";
@@ -18,6 +17,13 @@ const garantirArray = (data) => {
   if (Array.isArray(data)) return data;
   if (data.data && Array.isArray(data.data)) return data.data;
   return [];
+};
+
+// Extrai o valor de um resultado do Promise.allSettled com segurança
+const extrairDado = (resultado, fallback = null) => {
+  if (resultado.status === 'fulfilled') return resultado.value;
+  console.warn('⚠️ Requisição falhou:', resultado.reason?.message);
+  return fallback;
 };
 
 const Dashboard = () => {
@@ -43,7 +49,6 @@ const Dashboard = () => {
     cardsCapacidade: [],
     equipamentos: [],
     cardsKgPorImpressora: [],
-    cardsCapacidadePorImpressora: [],
     producaoPorImpressoraAnual: [],
     prototiposPorImpressoraAnual: [],
     errosPorImpressoraAnual: [],
@@ -112,30 +117,10 @@ const Dashboard = () => {
       setLoading(true);
       setError(null);
 
-      const [
-        resMetricas,
-        resEvolucao,
-        resAnual,
-        resMensalDetalhada,
-        resProducao,
-        resPrototipos,
-        resErros,
-        resPeso,
-        resFailed,
-        resAborted,
-        resKg,
-        resEquipamentos,
-        resKgPorImpressora,
-        resCapacidadePorImpressora,
-        resProducaoPorImpressoraAnual,
-        resPrototiposPorImpressoraAnual,
-        resErrosPorImpressoraAnual,
-        resPesoPorImpressoraAnual,
-        resFailedPorImpressoraAnual,
-        resAbortedPorImpressoraAnual,
-      ] = await Promise.all([
+      // Promise.allSettled — se uma requisição falhar, as outras continuam normalmente
+      const resultados = await Promise.allSettled([
         dashboardAPI.getMetricasKPI({ ano: anoSelecionado, mesInicio: 1, mesFim: 12 }),
-        dashboardAPI.getEvolucaoSKUs({ anoInicio: anoSelecionado - 1, mesInicio: 6, anoFim: anoSelecionado, mesFim: 12 }),
+        dashboardAPI.getEvolucaoSKUs({ ano: anoSelecionado }),
         dashboardAPI.getProducaoAnual({ anoInicio: 2019, anoFim: anoSelecionado }),
         dashboardAPI.getProducaoMensalDetalhada({ ano: anoSelecionado, mesInicio: 1, mesFim: 12 }),
         dashboardAPI.getProducaoMensal({ ano: anoSelecionado, mesInicio: 1, mesFim: 12 }),
@@ -147,7 +132,6 @@ const Dashboard = () => {
         dashboardAPI.getCardsKg({ ano: anoSelecionado, mesInicio: 1, mesFim: 12 }),
         dashboardAPI.getEquipamentos(),
         dashboardAPI.getCardsKgPorImpressora({ ano: anoSelecionado, mes: mesSelecionado }),
-        dashboardAPI.getCardsCapacidadePorImpressora({ ano: anoSelecionado, mes: mesSelecionado }),
         dashboardAPI.getProducaoPorImpressoraAnual({ ano: anoSelecionado, mesInicio: 1, mesFim: 12 }),
         dashboardAPI.getPrototiposPorImpressoraAnual({ ano: anoSelecionado, mesInicio: 1, mesFim: 12 }),
         dashboardAPI.getErrosPorImpressoraAnual({ ano: anoSelecionado, mesInicio: 1, mesFim: 12 }),
@@ -156,54 +140,44 @@ const Dashboard = () => {
         dashboardAPI.getAbortedPorImpressoraAnual({ ano: anoSelecionado, mesInicio: 1, mesFim: 12 }),
       ]);
 
-      // ════════════════════════════════════════════════════════════════
-      // 🔍 DIAGNÓSTICO DEFINITIVO — copie este bloco do console
-      // ════════════════════════════════════════════════════════════════
-      console.group('🔍 DIAGNÓSTICO PROTÓTIPOS');
-      console.log('URL chamada:', resPrototipos.config?.url);
-      console.log('Params:', JSON.stringify(resPrototipos.config?.params));
-      console.log('Status HTTP:', resPrototipos.status);
-      console.log('Tipo de resPrototipos.data:', typeof resPrototipos.data, Array.isArray(resPrototipos.data) ? `(array com ${resPrototipos.data.length} itens)` : '');
-      console.log('Conteúdo completo:', JSON.stringify(resPrototipos.data));
-      console.groupEnd();
-
-      console.group('🔍 DIAGNÓSTICO PRODUÇÃO (para comparar)');
-      console.log('URL chamada:', resProducao.config?.url);
-      console.log('Tipo:', typeof resProducao.data, Array.isArray(resProducao.data) ? `(array com ${resProducao.data.length} itens)` : '');
-      console.log('Conteúdo completo:', JSON.stringify(resProducao.data));
-      console.groupEnd();
-      // ════════════════════════════════════════════════════════════════
+      const [
+        resMetricas, resEvolucao, resAnual, resMensalDetalhada,
+        resProducao, resPrototipos, resErros, resPeso, resFailed, resAborted,
+        resKg, resEquipamentos, resKgPorImpressora,
+        resProducaoPorImpressoraAnual, resPrototiposPorImpressoraAnual,
+        resErrosPorImpressoraAnual, resPesoPorImpressoraAnual,
+        resFailedPorImpressoraAnual, resAbortedPorImpressoraAnual,
+      ] = resultados;
 
       const cardsCapacidade = await carregarCardsCapacidade(anoSelecionado);
 
       setDados({
-        metricas:         resMetricas.data,
-        evolucaoSKUs:     garantirArray(resEvolucao.data),
-        producaoAnual:    garantirArray(resAnual.data),
-        producaoMensal:   garantirArray(resMensalDetalhada.data),
+        metricas:         extrairDado(resMetricas)?.data ?? null,
+        evolucaoSKUs:     garantirArray(extrairDado(resEvolucao)?.data),
+        producaoAnual:    garantirArray(extrairDado(resAnual)?.data),
+        producaoMensal:   garantirArray(extrairDado(resMensalDetalhada)?.data),
         visaoGeral: {
-          producao:   garantirArray(resProducao.data),
-          prototipos: garantirArray(resPrototipos.data),
-          erros:      garantirArray(resErros.data),
-          peso:       garantirArray(resPeso.data),
-          failed:     garantirArray(resFailed.data),
-          aborted:    garantirArray(resAborted.data),
+          producao:   garantirArray(extrairDado(resProducao)?.data),
+          prototipos: garantirArray(extrairDado(resPrototipos)?.data),
+          erros:      garantirArray(extrairDado(resErros)?.data),
+          peso:       garantirArray(extrairDado(resPeso)?.data),
+          failed:     garantirArray(extrairDado(resFailed)?.data),
+          aborted:    garantirArray(extrairDado(resAborted)?.data),
         },
-        cardsKg:                      garantirArray(resKg.data),
+        cardsKg:                      garantirArray(extrairDado(resKg)?.data),
         cardsCapacidade,
-        equipamentos:                 garantirArray(resEquipamentos.data),
-        cardsKgPorImpressora:         garantirArray(resKgPorImpressora.data),
-        cardsCapacidadePorImpressora: garantirArray(resCapacidadePorImpressora.data),
-        producaoPorImpressoraAnual:   garantirArray(resProducaoPorImpressoraAnual.data),
-        prototiposPorImpressoraAnual: garantirArray(resPrototiposPorImpressoraAnual.data),
-        errosPorImpressoraAnual:      garantirArray(resErrosPorImpressoraAnual.data),
-        pesoPorImpressoraAnual:       garantirArray(resPesoPorImpressoraAnual.data),
-        failedPorImpressoraAnual:     garantirArray(resFailedPorImpressoraAnual.data),
-        abortedPorImpressoraAnual:    garantirArray(resAbortedPorImpressoraAnual.data),
+        equipamentos:                 garantirArray(extrairDado(resEquipamentos)?.data),
+        cardsKgPorImpressora:         garantirArray(extrairDado(resKgPorImpressora)?.data),
+        producaoPorImpressoraAnual:   garantirArray(extrairDado(resProducaoPorImpressoraAnual)?.data),
+        prototiposPorImpressoraAnual: garantirArray(extrairDado(resPrototiposPorImpressoraAnual)?.data),
+        errosPorImpressoraAnual:      garantirArray(extrairDado(resErrosPorImpressoraAnual)?.data),
+        pesoPorImpressoraAnual:       garantirArray(extrairDado(resPesoPorImpressoraAnual)?.data),
+        failedPorImpressoraAnual:     garantirArray(extrairDado(resFailedPorImpressoraAnual)?.data),
+        abortedPorImpressoraAnual:    garantirArray(extrairDado(resAbortedPorImpressoraAnual)?.data),
       });
 
     } catch (err) {
-      console.error("❌ Erro ao carregar dados:", err);
+      console.error("❌ Erro crítico ao carregar dados:", err);
       setError("Erro ao carregar os dados. Verifique a API.");
     } finally {
       setLoading(false);
@@ -285,10 +259,13 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {dados.metricas && <ComposicaoSKUs data={dados.metricas} darkMode={darkMode} anoSelecionado={anoSelecionado} />}
+        {dados.metricas && (
+          <ComposicaoSKUs data={dados.metricas} darkMode={darkMode} anoSelecionado={anoSelecionado} />
+        )}
 
-        {dados.evolucaoSKUs.length > 0 && <EvolucaoSKUs data={dados.evolucaoSKUs} darkMode={darkMode} />}
-        
+        {dados.evolucaoSKUs.length > 0 && (
+          <EvolucaoSKUs data={dados.evolucaoSKUs} darkMode={darkMode} anoSelecionado={anoSelecionado} />
+        )}
 
         {dados.visaoGeral.producao.length > 0 && (
           <VisaoGeralTabsComModal

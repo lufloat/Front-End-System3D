@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, ChevronRight, Activity, Clock, TrendingUp, Printer, BarChart3, Zap, Target, Award } from 'lucide-react';
 import TimelineCalendario from './TimelineCalendario';
 
-const baseUrl = import.meta.env.VITE_API_URL || 'http://192.168.148.19:8088/api/';
+const baseUrl = import.meta.env.VITE_API_URL;
 
 // ── Versão do cache: mude este número sempre que a estrutura da API mudar ──
-const CACHE_VERSION = 'v6'; // ← bumped para invalidar caches antigos sem taxaSucesso
+const CACHE_VERSION = 'v7'; // ← bumped para invalidar caches antigos sem taxaSucesso
 
 const fmt = (n, d = 1) => {
   if (n === null || n === undefined || isNaN(n)) return '0.0';
@@ -343,12 +343,10 @@ const CardsCapacidadeTimeline = ({ data, darkMode = false }) => {
                 const met  = resumoConsolidado.metricas    || {};
 
                 // ── taxaSucesso: lê da API, com fallback calculado das impressoras ──
-                const taxaSucesso = Number(
-                  met.taxaSucesso != null && met.taxaSucesso !== 0
-                    ? met.taxaSucesso
-                    : calcTaxaSucessoFallback(resumoConsolidado.impressoras)
-                );
-
+                // DEPOIS
+                const taxaSucesso = (met.taxaSucesso != null && met.taxaSucesso > 0)
+                  ? Number(met.taxaSucesso)
+                  : calcTaxaSucessoFallback(resumoConsolidado.impressoras);
                 const hProd   = Number(dist.producao?.horas       || 0);
                 const hPausa  = Number(dist.pausas?.horas         || 0);
                 const hOcio   = Number(dist.ociosidade?.horas     || 0);
